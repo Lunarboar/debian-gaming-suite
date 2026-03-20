@@ -1,0 +1,638 @@
+════════════════════════════════════════════════════════════════════════════════
+         DEBIAN GAMING OPTIMISATION SUITE — UNIVERSAL EDITION
+         INSTALLATION GUIDE & INSTRUCTIONS
+         
+         Scripts included:
+         → debian-gaming-setup-universal.sh   (run once on a fresh system)
+         → debian-gaming-update-universal.sh  (run regularly to stay cutting edge)
+════════════════════════════════════════════════════════════════════════════════
+
+A big thank you for downloading this suite. This was built to give every Linux
+gamer on a Debian-based system the same cutting-edge gaming experience that
+dedicated gaming distros like Nobara provide — regardless of your GPU or CPU.
+
+It is completely free. Share it freely with anyone who games on Linux.
+
+────────────────────────────────────────────────────────────────────────────────
+ SUPPORTED SYSTEMS
+────────────────────────────────────────────────────────────────────────────────
+
+ Operating Systems (Debian-based only):
+   ✓ Ubuntu 22.04 / 24.04 LTS and newer
+   ✓ Zorin OS 16 / 17 / 18 (any edition)
+   ✓ Linux Mint 21 / 22 and newer
+   ✓ Pop!_OS 22.04 and newer
+   ✓ Debian 11 (Bullseye) / 12 (Bookworm) and newer
+   ✓ Elementary OS 7 and newer
+   ✓ KDE Neon
+   ✓ Any other apt/dpkg based distro
+
+ GPUs supported:
+   ✓ AMD Radeon RX 5000 / 6000 / 7000 / 9000 series (RDNA 1-4)
+   ✓ AMD Radeon older (RX 400 / 500 series — Polaris)
+   ✓ NVIDIA GeForce GTX 900 series and newer
+   ✓ NVIDIA GeForce RTX 10 / 20 / 30 / 40 / 50 series
+   ✓ Intel Arc A-series (Alchemist)
+   ✓ Intel Arc B-series (Battlemage)
+   ✓ Intel Integrated Graphics (UHD / Iris Xe)
+   ✓ Hybrid AMD + NVIDIA (laptops with both GPUs)
+   ✓ Hybrid Intel + NVIDIA (laptops with both GPUs)
+
+ CPUs supported:
+   ✓ AMD Ryzen (all generations — 1000 through 9000 series)
+   ✓ AMD Threadripper
+   ✓ Intel Core (8th generation and newer — i3/i5/i7/i9)
+   ✓ Intel Core Ultra (Series 1 and 2)
+
+
+────────────────────────────────────────────────────────────────────────────────
+ PREREQUISITES — READ BEFORE RUNNING
+────────────────────────────────────────────────────────────────────────────────
+
+ Before running either script please make sure the following are in order:
+
+ 1. YOU ARE NOT RUNNING AS ROOT
+    ─────────────────────────────
+    Do NOT run these scripts with sudo or as the root user.
+    Run them as your normal everyday user account.
+    The scripts will ask for your sudo password when needed.
+
+    WRONG:  sudo ./debian-gaming-setup-universal.sh
+    RIGHT:  ./debian-gaming-setup-universal.sh
+
+
+ 2. YOU HAVE AN ACTIVE INTERNET CONNECTION
+    ────────────────────────────────────────
+    The scripts download several large packages from the internet including:
+    
+    • GE-Proton      (~700 MB)
+    • Wine-GE        (~400 MB)  
+    • DXVK           (~30 MB)
+    • VKD3D-Proton   (~20 MB)
+    • XanMod kernel  (~50 MB)
+    • GPU drivers    (varies)
+    
+    Minimum recommended connection: 10 Mbps
+    Estimated download total:        ~1.5 - 2.5 GB
+    Estimated total time:            15 - 60 minutes depending on speed
+
+
+ 3. YOU HAVE ENOUGH DISK SPACE
+    ───────────────────────────
+    Make sure you have at least 5 GB of free disk space before running.
+    
+    Check your available space with:
+        df -h ~
+
+
+ 4. YOUR SYSTEM IS UP TO DATE
+    ──────────────────────────
+    Before running the setup script, update your system first:
+
+        sudo apt update && sudo apt upgrade -y
+
+    Then reboot:
+
+        sudo reboot
+
+    After rebooting, then run the setup script.
+
+
+ 5. SECURE BOOT (IMPORTANT FOR NVIDIA AND XANMOD USERS)
+    ──────────────────────────────────────────────────────
+    If you have Secure Boot enabled in your BIOS it may block:
+    • The XanMod custom kernel from booting
+    • NVIDIA proprietary drivers from loading
+
+    You have two options:
+
+    Option A (Recommended): Disable Secure Boot in BIOS
+    → Reboot → Enter BIOS (usually F2, F10, F12 or Delete key)
+    → Find "Secure Boot" → Set to Disabled → Save and Exit
+
+    Option B: Enrol the kernel signing keys (advanced users only)
+    → This is complex and distro-specific — Option A is easier
+
+    AMD GPU users are generally not affected by Secure Boot.
+    Intel Arc users are generally not affected by Secure Boot.
+
+
+ 6. NOTE FOR NVIDIA USERS — EXISTING DRIVERS
+    ──────────────────────────────────────────
+    If you already have NVIDIA drivers installed from a .run file
+    (downloaded directly from nvidia.com), remove them first:
+
+        sudo nvidia-uninstall
+
+    Then reboot before running this script. The script installs drivers
+    the proper Debian/Ubuntu way which is more stable and maintainable.
+
+
+ 7. NOTE FOR POP!_OS USERS
+    ─────────────────────────
+    Pop!_OS ships with its own NVIDIA driver management. The script
+    will work but you may want to use Pop!_OS's built-in driver tool
+    for NVIDIA driver updates rather than the graphics-drivers PPA.
+    Everything else in the script works perfectly on Pop!_OS.
+
+
+ 8. NOTE FOR PURE DEBIAN (non-Ubuntu) USERS
+    ──────────────────────────────────────────
+    Pure Debian does not have Ubuntu PPAs. The script detects this
+    and skips PPAs gracefully, using your distro's own repositories.
+    This means some bleeding-edge packages (like kisak-mesa) will not
+    be available, but everything else installs correctly.
+    
+    To get the best AMD driver support on pure Debian, add
+    contrib and non-free repos first:
+
+        sudo nano /etc/apt/sources.list
+
+    Make sure your lines include "contrib non-free non-free-firmware":
+    
+        deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
+
+    Save, then run:
+        sudo apt update
+
+
+────────────────────────────────────────────────────────────────────────────────
+ INSTALLATION — STEP BY STEP
+────────────────────────────────────────────────────────────────────────────────
+
+ STEP 1 — Open a terminal
+    Right-click your desktop and select "Open Terminal"
+    or press Ctrl+Alt+T on most distros.
+
+
+ STEP 2 — Navigate to where you downloaded the scripts
+    
+    If you downloaded to your Downloads folder:
+        cd ~/Downloads
+
+
+ STEP 3 — Make the scripts executable
+
+        chmod +x debian-gaming-setup-universal.sh
+        chmod +x debian-gaming-update-universal.sh
+
+
+ STEP 4 — Run the setup script
+
+        ./debian-gaming-setup-universal.sh
+
+    The script will:
+    → Auto-detect your GPU and CPU
+    → Show you what it detected and ask you to confirm
+    → Ask one final confirmation before starting
+    → Run through all installation phases automatically
+    → Save a full log to your home folder
+
+    You do NOT need to watch it — you can let it run unattended
+    after confirming. It takes 15-60 minutes depending on your
+    internet speed.
+
+
+ STEP 5 — Install the update script as a system command
+
+        sudo mv debian-gaming-update-universal.sh /usr/local/bin/gaming-update
+
+    Now you can run it from any terminal at any time just by typing:
+
+        gaming-update
+
+
+ STEP 6 — REBOOT
+
+    This is NOT optional. You must reboot after setup to activate:
+    • The new XanMod gaming kernel
+    • New GPU drivers (especially NVIDIA)
+    • GRUB gaming boot parameters
+    • System tweaks
+
+        sudo reboot
+
+
+ STEP 7 — After rebooting, run the update script once
+
+        gaming-update
+
+    This verifies everything installed correctly and pulls any
+    updates that may have released since you ran the setup.
+
+
+ STEP 8 — Configure Steam
+
+    Open Steam and do the following:
+    
+    a) Go to Steam → Settings → Compatibility
+    b) Tick "Enable Steam Play for all titles"
+    c) Select GE-Proton as the compatibility tool
+       (it will appear in the dropdown after the setup script ran)
+
+    This allows Windows games to run on Linux.
+
+
+ STEP 9 — Add Steam launch options
+
+    A file called Gaming-Launch-Options.txt was saved to your
+    home folder during setup. It contains personalised launch
+    options for your specific GPU.
+
+    To apply globally in Steam:
+    → Steam → Settings → General → Launch Options
+    → Paste the GLOBAL line from Gaming-Launch-Options.txt
+
+    For individual games:
+    → Right-click the game → Properties → General
+    → Paste the DEMANDING GAMES line into Launch Options
+
+
+ STEP 10 — Enable ReBAR in BIOS (AMD and NVIDIA users)
+    
+    Resizable BAR (ReBAR) is a free performance boost of 5-15%
+    for AMD and NVIDIA GPUs. It requires a BIOS setting:
+
+    → Reboot → Enter BIOS
+    → Find "Above 4G Decoding" → Enable
+    → Find "Resizable BAR" or "Re-Size BAR Support" → Enable
+    → Save and Exit → Reboot
+
+    Not all motherboards support this. If you cannot find it,
+    your board may not support ReBAR — that is fine.
+
+
+────────────────────────────────────────────────────────────────────────────────
+ WHAT THE SCRIPTS INSTALL
+────────────────────────────────────────────────────────────────────────────────
+
+ KERNEL
+   XanMod RT x64v3 — a gaming-optimised Linux kernel featuring:
+   • BORE process scheduler (prioritises games over background tasks)
+   • Low-latency real-time patches
+   • CPU-specific optimisations for both AMD Ryzen and Intel Core
+   • Better frame time consistency and reduced micro-stuttering
+
+ GPU DRIVERS (installed based on your GPU choice)
+   AMD   → Bleeding-edge Mesa via kisak PPA, RADV Vulkan, AMDGPU firmware
+   NVIDIA→ Latest proprietary driver, Vulkan ICD, nvidia-persistenced,
+            DXVK-NVAPI (enables DLSS and NVIDIA Reflex in supported games)
+   Arc   → Intel graphics repo, GuC/HuC firmware, ANV Vulkan pipeline cache
+
+ GAMING COMPATIBILITY LAYERS
+   GE-Proton    — GloriousEggroll's Proton build with extra game patches.
+                  Allows Windows games to run on Linux via Steam.
+                  Has fixes for games that official Proton does not support.
+   Wine-GE      — GloriousEggroll's Wine build for Lutris.
+                  For non-Steam Windows games.
+   DXVK         — Translates DirectX 9/10/11 to Vulkan.
+                  Faster and more compatible than the default Wine translation.
+   VKD3D-Proton — Translates DirectX 12 to Vulkan.
+                  Required for modern AAA games that use DX12.
+   DXVK-NVAPI   — NVIDIA only. Enables DLSS and NVIDIA Reflex in games
+                  that support those technologies.
+
+ GAMING TOOLS
+   GameMode     — Boosts CPU and GPU performance when a game is running.
+                  Automatically activates via the Steam launch options.
+   MangoHud     — On-screen overlay showing FPS, frametime, GPU temp,
+                  CPU temp, VRAM usage and more while gaming.
+   Gamescope    — Valve's micro-compositor for better fullscreen handling
+                  and resolution scaling.
+
+ LAUNCHERS
+   Steam        — Main gaming platform.
+   Lutris       — Open-source game manager for non-Steam games.
+   Heroic       — Epic Games Store and GOG launcher for Linux.
+
+ SYSTEM TWEAKS
+   XanMod kernel boot parameters optimised for gaming
+   AMD pstate / Intel pstate active CPU frequency scaling
+   BBR network congestion control (lower ping in online games)
+   CPU performance governor (full clock speeds always available)
+   ZRAM compressed swap (smoother performance when RAM is full)
+   IRQ balance (better interrupt distribution across CPU cores)
+   Gaming sysctl parameters (memory, scheduler, filesystem tuning)
+
+ AUTOMATED PIPELINE
+   Weekly systemd timer that automatically runs gaming-update
+   in the background to keep everything current.
+
+
+────────────────────────────────────────────────────────────────────────────────
+ ONGOING MAINTENANCE — THE UPDATE SCRIPT
+────────────────────────────────────────────────────────────────────────────────
+
+ After installation, simply run this regularly:
+
+     gaming-update
+
+ Recommended frequency:
+   • Once a week
+   • Before playing a newly released game
+   • After any major system update (sudo apt upgrade)
+   • Whenever a game is not working and you want the latest fixes
+
+ The update script automatically:
+   → Checks and upgrades system packages
+   → Updates your GPU drivers (Mesa/NVIDIA/Intel)
+   → Pulls the latest GE-Proton from GloriousEggroll's GitHub
+   → Pulls the latest Wine-GE
+   → Updates DXVK and VKD3D-Proton
+   → Updates DXVK-NVAPI (NVIDIA only)
+   → Updates GameMode, MangoHud, Lutris, Steam
+   → Verifies all gaming tweaks are still active
+   → Shows ProtonDB compatibility ratings for your installed games
+   → Cleans old versions to save disk space
+   → Saves a log to ~/.local/share/gaming-update-logs/
+
+ The weekly systemd timer runs this automatically in the background
+ so you stay cutting edge without thinking about it.
+
+ Check when the next auto-update is scheduled:
+     systemctl list-timers | grep gaming
+
+ View the last auto-update log:
+     journalctl -u gaming-patch.service -n 50
+
+
+────────────────────────────────────────────────────────────────────────────────
+ USEFUL COMMANDS AFTER INSTALLATION
+────────────────────────────────────────────────────────────────────────────────
+
+ Run the update pipeline manually:
+     gaming-update
+
+ Verify XanMod kernel is active:
+     uname -r
+     (should contain "xanmod" in the output)
+
+ Check Mesa version (AMD / Intel):
+     glxinfo | grep "OpenGL version"
+     (should show Mesa 25.x or higher)
+
+ Check NVIDIA driver version:
+     nvidia-smi
+
+ Check CPU governor (should say "performance"):
+     cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+
+ Check ZRAM is active:
+     cat /proc/swaps
+     (should show /dev/zram0)
+
+ Check Vulkan is working:
+     vulkaninfo | grep "GPU id"
+
+ Check ProtonDB for a specific game (replace APPID):
+     curl -s https://www.protondb.com/api/v1/reports/summaries/APPID.json
+
+ View gaming-update logs:
+     ls ~/.local/share/gaming-update-logs/
+     cat ~/.local/share/gaming-update-logs/[latest log file]
+
+ Check the weekly auto-update timer:
+     systemctl status gaming-patch.timer
+
+ Manually trigger the auto-update service:
+     sudo systemctl start gaming-patch.service
+
+
+────────────────────────────────────────────────────────────────────────────────
+ TROUBLESHOOTING
+────────────────────────────────────────────────────────────────────────────────
+
+ PROBLEM: Script closes immediately after running
+ SOLUTION: Open a terminal first, then run the script from inside it.
+           Do not double-click the .sh file.
+           Run: cd ~/Downloads && ./debian-gaming-setup-universal.sh
+
+ PROBLEM: "Permission denied" when running the script
+ SOLUTION: Make it executable first:
+           chmod +x debian-gaming-setup-universal.sh
+
+ PROBLEM: "apt update failed" during setup
+ SOLUTION: Check your internet connection and try again.
+           Also try: sudo apt update
+           If you see GPG errors, your system keys may need updating:
+           sudo apt-key update
+
+ PROBLEM: XanMod kernel not showing after reboot (still on old kernel)
+ SOLUTION: Check GRUB loaded the new kernel:
+           uname -r
+           If it still shows the old kernel, open GRUB at boot
+           (hold Shift during boot) and manually select the XanMod entry.
+           Then set it as default in GRUB settings.
+
+ PROBLEM: NVIDIA — black screen after reboot
+ SOLUTION: Boot into recovery mode or select old kernel in GRUB.
+           Then run: sudo ubuntu-drivers autoinstall
+           Or remove the new driver: sudo apt purge nvidia-driver-*
+           And reinstall: sudo ubuntu-drivers autoinstall
+
+ PROBLEM: NVIDIA — "nvidia-smi: command not found" after setup
+ SOLUTION: The driver needs a reboot to activate. Reboot and try again.
+           If still not working: sudo apt install nvidia-utils-570
+
+ PROBLEM: GE-Proton not showing in Steam
+ SOLUTION: Restart Steam completely (not just close the window):
+           In Steam: Steam menu → Exit
+           Then reopen Steam.
+           GE-Proton should appear in:
+           Settings → Compatibility → dropdown list
+
+ PROBLEM: Games still stuttering badly
+ SOLUTION: Make sure you are using GE-Proton, not the default Proton.
+           Check your Steam launch options are applied.
+           Run gaming-update to get the very latest patches.
+           Check ProtonDB for game-specific fixes.
+
+ PROBLEM: Intel Arc — games crash or have graphical corruption
+ SOLUTION: Make sure GuC/HuC firmware is enabled.
+           Check: cat /sys/kernel/debug/dri/0/i915_capabilities | grep guc
+           If not enabled: sudo update-initramfs -u && sudo reboot
+
+ PROBLEM: Hybrid laptop — game running on wrong GPU
+ SOLUTION: For NVIDIA dGPU: add "prime-run" before the command
+           In Steam launch options: prime-run %command%
+           Or: __NV_PRIME_RENDER_OFFLOAD=1 __VK_LAYER_NV_optimus=NVIDIA_only %command%
+
+ PROBLEM: "No space left on device" during setup
+ SOLUTION: Free up disk space before running.
+           Check usage: df -h
+           Clean apt cache: sudo apt clean
+           Remove old kernels: sudo apt autoremove --purge
+
+ PROBLEM: Script failed partway through
+ SOLUTION: Check the log file in your home folder:
+           ls ~/debian-gaming-setup-*.log
+           cat ~/debian-gaming-setup-*.log | tail -50
+           The script is safe to run again — it skips anything
+           already installed and continues where it left off.
+
+ PROBLEM: gaming-update command not found
+ SOLUTION: Install it as a system command:
+           sudo mv debian-gaming-update-universal.sh /usr/local/bin/gaming-update
+           sudo chmod +x /usr/local/bin/gaming-update
+
+
+────────────────────────────────────────────────────────────────────────────────
+ REVERTING CHANGES (if you want to undo everything)
+────────────────────────────────────────────────────────────────────────────────
+
+ If you ever want to revert the changes made by these scripts:
+
+ Remove XanMod kernel and go back to default:
+     sudo apt purge linux-xanmod*
+     sudo update-grub
+     sudo reboot
+
+ Restore original GRUB settings:
+     sudo cp /etc/default/grub.backup.[date] /etc/default/grub
+     sudo update-grub
+
+ Remove gaming sysctl tweaks:
+     sudo rm /etc/sysctl.d/99-gaming-universal.conf
+     sudo sysctl --system
+
+ Remove gaming-update script:
+     sudo rm /usr/local/bin/gaming-update
+     sudo systemctl disable gaming-patch.timer
+     sudo rm /etc/systemd/system/gaming-patch.*
+
+ Remove GE-Proton:
+     rm -rf ~/.steam/root/compatibilitytools.d/GE-Proton*
+
+ Remove Wine-GE:
+     rm -rf ~/.local/share/lutris/runners/wine/GE-*
+
+ Reset CPU governor:
+     sudo systemctl disable cpu-performance.service
+     sudo systemctl stop cpu-performance.service
+
+
+────────────────────────────────────────────────────────────────────────────────
+ FREQUENTLY ASKED QUESTIONS
+────────────────────────────────────────────────────────────────────────────────
+
+ Q: Is this safe to run on my daily driver / work machine?
+ A: Yes. The scripts only install gaming optimisations and do not touch
+    your personal files, documents, or non-gaming applications.
+    GRUB is backed up before any changes are made.
+    Everything can be reverted (see section above).
+
+ Q: Will this break my system?
+ A: It is designed to be safe. The most significant change is the kernel
+    upgrade to XanMod — if anything goes wrong you can always boot back
+    into your original kernel via the GRUB menu at startup.
+
+ Q: Do I need to keep both script files?
+ A: After installation you only need the update script.
+    The setup script is only needed for fresh installations.
+    You can delete debian-gaming-setup-universal.sh after setup.
+    Keep debian-gaming-update-universal.sh or move it to
+    /usr/local/bin/gaming-update as instructed.
+
+ Q: How much disk space will this use?
+ A: Approximately 3-5 GB total for all installed components.
+    GE-Proton alone is about 700 MB installed.
+    The scripts automatically clean up old versions when updating.
+
+ Q: Can I run this on a laptop?
+ A: Yes. Laptops work great. Note that the CPU performance governor
+    will keep clocks high even on battery which drains faster.
+    If you want to save battery when not gaming, you can temporarily
+    set the governor back: sudo cpupower frequency-set -g powersave
+
+ Q: Does this work with Wayland?
+ A: Yes. The scripts configure NVIDIA DRM modeset which is required
+    for NVIDIA + Wayland. AMD and Intel work on Wayland natively.
+
+ Q: Will my Windows games save data be affected?
+ A: No. Game save data is stored in your Steam folder and is not
+    touched by these scripts.
+
+ Q: Can I use this with Windows games from Epic/GOG?
+ A: Yes. Heroic Games Launcher is installed for Epic and GOG games.
+    Use GE-Proton or Wine-GE as the compatibility tool in Heroic.
+
+ Q: What is ProtonDB?
+ A: ProtonDB is a community database where Linux gamers report how well
+    Windows games run on Linux via Proton. Ratings are:
+    Platinum → Works perfectly out of the box
+    Gold     → Works great with minor tweaks
+    Silver   → Works but with some issues
+    Bronze   → Runs but with significant problems
+    Borked   → Does not currently work on Linux
+    The update script shows your games' ratings so you know what to expect.
+
+ Q: What is GE-Proton and why is it better than normal Proton?
+ A: GE-Proton is a custom Proton build by GloriousEggroll that includes
+    patches and fixes that have not yet been merged into Valve's official
+    Proton. Many games that are rated "Borked" on official Proton work
+    perfectly on GE-Proton. It is updated very frequently.
+
+ Q: Is this the same as installing Nobara OS?
+ A: It gives you approximately 90-95% of Nobara's gaming performance
+    on your existing distro. The main thing you cannot replicate is
+    Nobara's kernel-level game patches which are baked into their
+    custom kernel. But everything at the user level — Proton, Wine,
+    DXVK, VKD3D, drivers — this suite handles completely.
+
+
+────────────────────────────────────────────────────────────────────────────────
+ CREDITS & ACKNOWLEDGEMENTS
+────────────────────────────────────────────────────────────────────────────────
+
+ This suite stands on the shoulders of incredible open source work:
+
+ GloriousEggroll       GE-Proton and Wine-GE
+                       github.com/GloriousEggroll
+
+ XanMod Project        XanMod Linux kernel
+                       xanmod.org
+
+ DXVK Team             DirectX to Vulkan translation
+                       github.com/doitsujin/dxvk
+
+ HansKristian-Work     VKD3D-Proton (DirectX 12 support)
+                       github.com/HansKristian-Work/vkd3d-proton
+
+ FeralInteractive      GameMode
+                       github.com/FeralInteractive/gamemode
+
+ flightlessmango       MangoHud
+                       github.com/flightlessmango/MangoHud
+
+ Valve                 Steam, Proton, Gamescope
+
+ kisak                 Bleeding-edge Mesa PPA for Ubuntu
+                       launchpad.net/~kisak/+archive/ubuntu/kisak-mesa
+
+ ProtonDB Community    Game compatibility database
+                       protondb.com
+
+ The entire Linux gaming community for making this possible.
+
+
+────────────────────────────────────────────────────────────────────────────────
+ SHARING & CONTRIBUTING
+────────────────────────────────────────────────────────────────────────────────
+
+ This suite is free. Share it with anyone gaming on Linux.
+ Upload it to GitHub, Reddit, forums, Discord — wherever it helps people.
+
+ If you improve it, please share your improvements back so everyone benefits.
+
+ Suggested places to share:
+   reddit.com/r/linux_gaming
+   reddit.com/r/linux
+   github.com (host it as a repo)
+   ProtonDB forums
+   Linux gaming Discord servers
+
+ If you find bugs or have improvements, document them so others can benefit.
+
+════════════════════════════════════════════════════════════════════════════════
+ Happy gaming on Linux. You deserve a setup this good.
+════════════════════════════════════════════════════════════════════════════════
