@@ -86,6 +86,7 @@ detect_system() {
     echo -e "  ${CYAN}GPU     :${NC} $GPU_VENDOR"
     echo -e "  ${CYAN}CPU     :${NC} $CPU_INFO"
     echo -e "  ${CYAN}RAM     :${NC} ${RAM_GB}GB"
+    echo -e "  ${CYAN}DE      :${NC} $XDG_CURRENT_DESKTOP"
 
     if [[ "$DISTRO_BASE" == "pikaos" ]]; then ok "PikaOS detected: Already optimized. Exiting."; exit 0; fi
 }
@@ -129,6 +130,8 @@ vm.swappiness=10
 net.core.default_qdisc=fq
 net.ipv4.tcp_congestion_control=bbr
 kernel.perf_event_paranoid=-1
+kernel.split_lock_mitigate=0
+vm.max_map_count=2147483642
 EOF
     sudo sysctl -p "$SYS_FILE" > /dev/null 2>&1 || warn "Could not apply sysctl"
 
@@ -137,9 +140,34 @@ EOF
         curl -s 'https://liquorix.net/install-liquorix.sh' | sudo bash || fail "Liquorix install failed"
         
         backup_file "/etc/default/grub"
-        sudo sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="quiet splash mitigations=off nowatchdog"/' /etc/default/grub
+        sudo sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="quiet splash mitigations=off nowatchdog split_lock_detect=off"/' /etc/default/grub
         sudo update-grub 2>/dev/null || sudo grub-mkconfig -o /boot/grub/grub.cfg 2>/dev/null || warn "GRUB update failed"
     fi
+}
+
+phase_de_tweaks() {
+    print_section "Desktop Environment Optimization"
+    local DE="${XDG_CURRENT_DESKTOP,,}"
+
+    case "$DE" in
+        *kde*)
+            step "KDE Plasma: Enabling composition blocking for games..."
+            kwriteconfig5 --file kwinrc --group Windows --key AllowDirectScanout true 2>/dev/null
+            kwriteconfig5 --file kwinrc --group Compositing --key Enabled true 2>/dev/null
+            ok "KDE Plasma optimized"
+            ;;
+        *xfce*)
+            step "XFCE: Disabling compositor for full-screen windows..."
+            xfconf-query -c xfwm4 -p /general/unredirect_overlays -n -t bool -s true 2>/dev/null
+            ok "XFCE optimized"
+            ;;
+        *gnome*)
+            info "GNOME: Automatic unredirection is handled by the shell. No action needed."
+            ;;
+        *)
+            info "Desktop Environment ($DE) not specifically tuned. Standard optimizations applied."
+            ;;
+    esac
 }
 
 phase_gamemode() {
@@ -190,15 +218,14 @@ if ! confirm "Start setup?"; then exit 0; fi
 phase_system_prep
 phase_drivers
 phase_tweaks
+phase_de_tweaks
 phase_gamemode
 
 if [[ "$G_MODE" == "container" ]]; then
     phase_gaming_container
 else
-    # Native Stack with Heroic Fallback
     sudo apt install -y steam mangohud lutris gamemode
     if ! sudo apt install -y heroic-games-launcher-bin 2>/dev/null; then
-        info "Heroic not found in APT. Trying Flatpak..."
         if ! command -v flatpak &>/dev/null; then sudo apt install -y flatpak; fi
         sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
         sudo flatpak install -y flathub com.heroicgameslauncher.hgl
@@ -207,3 +234,4 @@ fi
 
 print_section "Complete"
 ok "Debian ready for gaming. Reboot required."
+info "After reboot, run 'gamemoded -t' to verify your setup."

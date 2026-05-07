@@ -136,6 +136,7 @@ run_setup() {
     ok "Setup complete!"
     info "Gaming Environment: ${BOLD}$GAMING_MODE${NC}"
     info "Rollback script: $BACKUP_DIR/restore.sh"
+    info "After reboot, run 'gamemoded -t' to verify your setup."
     warn "Please REBOOT to apply all changes (Kernel, Group, Drivers)."
 }
 

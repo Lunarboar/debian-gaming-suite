@@ -18,7 +18,9 @@ apply_grub_tweaks() {
     
     backup_file "$GRUB_FILE"
 
-    local PARAMS="quiet splash nowatchdog"
+    # Default performance params
+    local PARAMS="quiet splash nowatchdog split_lock_detect=off"
+    
     if [[ "$ADVANCED_MODE" == "true" ]]; then
         PARAMS="$PARAMS mitigations=off nohz_full=all rcu_nocbs=all threadirqs"
     fi
@@ -33,6 +35,7 @@ apply_grub_tweaks() {
         PARAMS="$PARAMS nvidia-drm.modeset=1"
     fi
 
+    # Clean up double spaces
     PARAMS=$(echo "$PARAMS" | tr -s ' ')
 
     step "Updating $GRUB_FILE..."
