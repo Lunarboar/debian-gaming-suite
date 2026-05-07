@@ -16,7 +16,6 @@
 - **GUI Management**: Integrated **Distroshelf** (Flatpak) to manage your gaming containers visually.
 - **XanMod/Liquorix Kernel**: High-performance, low-latency gaming kernels.
 - **GPU Optimization**: Automatic setup for **FSR 3/4**, **DLSS**, and **XeSS**.
-- **Anti-Cheat Support**: Pre-configured runtimes for EAC and BattlEye.
 - **Safe Rollback**: Built-in backup and restoration system (`revert.sh`).
 
 ---
@@ -24,11 +23,11 @@
 ## ✅ Supported Hardware
 
 ### GPUs
-| GPU | Upscaling | Ray Tracing | Anti-Cheat |
-|-----|-----------|-------------|------------|
-| AMD Radeon (RDNA) | FSR 3 / 4 | ✅ DXR 1.0 + 1.1 | ✅ EAC + BattlEye |
-| NVIDIA GeForce RTX | DLSS / FSR 3 | ✅ DXR 1.0 + 1.1 | ✅ EAC + BattlEye |
-| Intel Arc A/B-series | XeSS / FSR 3 | ✅ DXR 1.0 + 1.1 | ✅ EAC + BattlEye |
+| GPU | Upscaling | Ray Tracing |
+|-----|-----------|-------------|
+| AMD Radeon (RDNA) | FSR 3 / 4 | ✅ DXR 1.0 + 1.1 |
+| NVIDIA GeForce RTX | DLSS / FSR 3 | ✅ DXR 1.0 + 1.1 |
+| Intel Arc A/B-series | XeSS / FSR 3 | ✅ DXR 1.0 + 1.1 |
 
 ### CPUs
 AMD Ryzen (all generations) • Intel Core (8th gen+) • Intel Core Ultra
@@ -71,12 +70,6 @@ If anything goes wrong, simply run:
 ```bash
 ./revert.sh
 ```
-
----
-
-## 🎯 Anti-Cheat Games
-Install the runtimes in Steam, then use the provided launch options for:
-- Fortnite ✓ Apex Legends ✓ GTA 5 ✓ Battlefield 2042 ✓ Rust ✓
 
 ---
 
