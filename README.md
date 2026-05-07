@@ -45,10 +45,10 @@ Ubuntu • Zorin OS • Linux Mint • Pop!_OS • Debian • Elementary OS • 
 ## 🚀 Quick Start
 ```bash
 # Make executable
-chmod +x debian-gaming-setup-universal.sh
+chmod +x setup.sh
 
 # Run setup (auto-detects your GPU and CPU)
-./debian-gaming-setup-universal.sh
+./setup.sh
 ```
 
 **Read `INSTRUCTIONS.txt` before running** — covers prerequisites, Secure Boot, and troubleshooting.
@@ -75,8 +75,8 @@ The weekly timer runs it automatically in the background.
 
 | File | Purpose |
 |------|---------|
-| `debian-gaming-setup-universal.sh` | Run once on a fresh system |
-| `debian-gaming-update-universal.sh` | Run regularly to stay cutting edge |
+| `setup.sh` | Main entry point (Modular) |
+| `update.sh` | Run regularly to stay cutting edge |
 | `zorin-gaming-setup.sh` | Zorin OS specific — AMD Ryzen + RX 9070 XT |
 | `zorin-gaming-update.sh` | Zorin OS updater — AMD Ryzen + RX 9070 XT |
 | `INSTRUCTIONS.txt` | Full guide, prerequisites, troubleshooting, FAQ |

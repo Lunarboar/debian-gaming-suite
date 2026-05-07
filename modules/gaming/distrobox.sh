@@ -64,8 +64,17 @@ setup_distrobox_gaming() {
     step "Configuring container user groups..."
     distrobox enter "$CONTAINER_NAME" -- sudo usermod -aG gamemode "$USER" 2>/dev/null || true
 
-    step "Exporting Steam to host desktop..."
+    step "Exporting apps to host desktop..."
     distrobox enter "$CONTAINER_NAME" -- distrobox-export --app steam || warn "Could not export Steam shortcut."
     
+    # 4. Install Distroshelf (GUI Manager)
+    step "Installing Distroshelf (GUI Manager)..."
+    if command -v flatpak &>/dev/null; then
+        flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo 2>/dev/null
+        flatpak install -y flathub io.github.armijn.Distroshelf || warn "Could not install Distroshelf"
+    else
+        warn "Flatpak not found, skipping Distroshelf installation."
+    fi
+
     ok "Arch Linux gaming environment ready!"
 }
