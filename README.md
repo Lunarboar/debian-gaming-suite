@@ -38,7 +38,7 @@ AMD Ryzen (all generations) • Intel Core (8th gen+) • Intel Core Ultra
 
 ```bash
 # Clone the repository
-git clone https://github.com/YourUsername/little-script.git
+git clone https://github.com/Teilenh/little-script.git
 cd little-script
 
 # Make the orchestrator executable
