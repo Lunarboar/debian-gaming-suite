@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ════════════════════════════════════════════════════════════════════════════
-# DEBIAN GAMING SETUP — MODULAR EDITION (2.1.0)
+# DEBIAN GAMING SETUP (Modular)
 # ════════════════════════════════════════════════════════════════════════════
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,12 +15,13 @@ source "$UTILS_DIR/rollback.sh"
 
 # Global State
 ADVANCED_MODE=false
+GAMING_MODE="container" # container or native
 
 print_banner() {
     clear
     echo -e "${BLUE}"
     echo "  ╔════════════════════════════════════════════════════════════════════╗"
-    echo "  ║        DEBIAN GAMING OPTIMISATION SUITE — V2.1.0 (Modular)       ║"
+    echo "  ║        DEBIAN GAMING OPTIMISATION SUITE (Modular)          ║"
     echo "  ║             Universal Support: AMD • NVIDIA • Intel              ║"
     echo -e "  ╚════════════════════════════════════════════════════════════════════╝${NC}"
 }
@@ -44,24 +45,27 @@ main_menu() {
 
     # Check for PikaOS
     if [[ "$DISTRO_BASE" == "pikaos" ]]; then
-        ok "PikaOS detected: System is already optimized for gaming. Exiting."
+        ok "PikaOS detected: System is already optimized. Exiting."
         exit 0
     fi
 
-    # 2. Mode Selection
-    echo -e "\n  ${WHITE}${BOLD}Select Setup Mode:${NC}"
-    echo -e "  ${GREEN}1)${NC} ${BOLD}SAFE${NC}     - Drivers, Distrobox Arch (Gaming), basic tweaks"
-    echo -e "  ${RED}2)${NC} ${BOLD}ADVANCED${NC} - High-perf tweaks: Liquorix Kernel, GRUB, No Mitigations"
-    echo -e "  ${DIM}q) Quit${NC}"
+    # 2. Gaming Setup Choice
+    echo -e "\n  ${WHITE}${BOLD}1. Select Gaming Environment:${NC}"
+    echo -e "  1) ${GREEN}CONTAINERIZED${NC} (Distrobox + Arch Linux) - Recommended"
+    echo -e "  2) ${YELLOW}NATIVE${NC}        (Debian APT)"
+    
+    read -p "  Choice [1]: " gaming_choice
+    [[ "$gaming_choice" == "2" ]] && GAMING_MODE="native" || GAMING_MODE="container"
+
+    # 3. Mode Selection (Performance)
+    echo -e "\n  ${WHITE}${BOLD}2. Select Optimization Level:${NC}"
+    echo -e "  1) ${GREEN}SAFE${NC}"
+    echo -e "  2) ${RED}ADVANCED${NC} (Liquorix Kernel, No Mitigations)"
     
     read -p "  Choice [1]: " mode_choice
-    case "$mode_choice" in
-        2) ADVANCED_MODE=true; ok "Advanced mode selected" ;;
-        q) exit 0 ;;
-        *) ADVANCED_MODE=false; ok "Safe mode selected" ;;
-    esac
+    [[ "$mode_choice" == "2" ]] && ADVANCED_MODE=true || ADVANCED_MODE=false
 
-    # 3. Confirmation
+    # 4. Confirmation
     if ! confirm "Proceed with installation?"; then
         echo "Exiting..."
         exit 0
@@ -84,28 +88,25 @@ run_setup() {
     source "$MODULES_DIR/system/sysctl.sh"
     source "$MODULES_DIR/gaming/distrobox.sh"
     source "$MODULES_DIR/gaming/proton.sh"
+    source "$MODULES_DIR/gaming/tools.sh"
     source "$MODULES_DIR/gaming/upscaling.sh"
-    source "$MODULES_DIR/gaming/anticheat.sh"
 
     # Start Setup
     create_restore_script
 
-    # Repos
+    # ── Repos ────────────────────────────────────────────────────────
     setup_repos "$DISTRO_BASE" "$CODENAME" "$PKG_MGR"
 
-    # Drivers (Host side for Vulkan/Mesa basics)
+    # ── Drivers (Host) ───────────────────────────────────────────────
     case "$GPU_VENDOR" in
         amd) install_amd_drivers "$DISTRO_BASE" ;;
         nvidia*) install_nvidia_drivers "$DISTRO_BASE" ;;
         intel_arc) install_intel_arc_drivers "$DISTRO_BASE" "$CODENAME" ;;
         intel_igp) install_intel_igp_drivers ;;
-        hybrid*) 
-            install_intel_igp_drivers
-            install_nvidia_drivers "$DISTRO_BASE"
-            ;;
+        hybrid*) install_intel_igp_drivers; install_nvidia_drivers "$DISTRO_BASE" ;;
     esac
 
-    # System Tweaks
+    # ── System Tweaks ────────────────────────────────────────────────
     setup_zram "$TOTAL_RAM"
     apply_sysctl_tweaks "$CPU_VENDOR" "$GPU_VENDOR"
     
@@ -116,18 +117,26 @@ run_setup() {
         apply_grub_tweaks "$CPU_VENDOR" "$GPU_VENDOR" "false"
     fi
 
-    # Gaming Stack via Distrobox (Arch Linux)
-    setup_distrobox_gaming
+    # ── Gaming Stack ─────────────────────────────────────────────────
+    # Install GameMode on host anyway (needed for hardware access)
+    sudo $PKG_MGR install -y gamemode
+    setup_gamemode_config
+
+    if [[ "$GAMING_MODE" == "container" ]]; then
+        setup_distrobox_gaming
+    else
+        install_native_gaming_stack
+    fi
     
-    # These might still be useful on host for some native apps
+    # Host-side helpers
     install_dxvk_vkd3d
     setup_upscaling "$GPU_VENDOR"
-    setup_anticheat
 
     print_section "Installation Summary"
     ok "Setup complete!"
-    info "A rollback script has been created at: $BACKUP_DIR/restore.sh"
-    warn "Please REBOOT your system to apply all changes."
+    info "Gaming Environment: ${BOLD}$GAMING_MODE${NC}"
+    info "Rollback script: $BACKUP_DIR/restore.sh"
+    warn "Please REBOOT to apply all changes (Kernel, Group, Drivers)."
 }
 
 # Run

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ════════════════════════════════════════════════════════════════════════════
-# DEBIAN GAMING UPDATE — MODULAR EDITION (2.1.0)
+# DEBIAN GAMING UPDATE (Modular)
 # ════════════════════════════════════════════════════════════════════════════
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,7 +15,7 @@ print_banner() {
     clear
     echo -e "${BLUE}"
     echo "  ╔════════════════════════════════════════════════════════════════════╗"
-    echo "  ║        DEBIAN GAMING UPDATE SUITE — V2.1.0 (Modular)             ║"
+    echo "  ║        DEBIAN GAMING UPDATE SUITE (Modular)                ║"
     echo "  ╚════════════════════════════════════════════════════════════════════╝${NC}"
 }
 

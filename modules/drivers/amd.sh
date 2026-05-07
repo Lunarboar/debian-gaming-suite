@@ -1,36 +1,32 @@
 #!/bin/bash
 
 [[ -z "$NC" ]] && source "$(dirname "$0")/../../utils/common.sh"
-[[ -z "$BACKUP_DIR" ]] && source "$(dirname "$0")/../../utils/rollback.sh"
 
 install_amd_drivers() {
     local DISTRO_BASE="$1"
-    
-    print_section "AMD GPU Drivers (Mesa/RADV)"
+    print_section "AMD GPU Drivers"
 
-    # Add kisak bleeding-edge Mesa PPA (Ubuntu-based only)
-    if [[ "$DISTRO_BASE" == "ubuntu" ]]; then
-        # This function should be in repos module but I can call it if I source it
-        # Or just do it here for now to keep it self-contained
-        if ! grep -ri "kisak-mesa" /etc/apt/sources.list.d/ &>/dev/null; then
-            step "Adding kisak bleeding-edge Mesa PPA..."
-            sudo add-apt-repository -y ppa:kisak/kisak-mesa 2>/dev/null && \
-                sudo apt update -qq 2>/dev/null && ok "kisak-mesa PPA added" || \
-                warn "Could not add kisak PPA — using distro Mesa"
-        fi
+    step "Installing Mesa & Vulkan drivers..."
+    local PKGS=(
+        mesa-vulkan-drivers libvulkan1 vulkan-tools 
+        mesa-utils libgl1-mesa-dri xserver-xorg-video-amdgpu
+        mesa-va-drivers mesa-vdpau-drivers linux-firmware
+    )
+    
+    sudo apt install -y "${PKGS[@]}" || {
+        fail "Failed to install AMD drivers. Please check your internet connection and APT sources."
+        return 1
+    }
+
+    step "Configuring AMDGPU performance..."
+    local MODPROBE_FILE="/etc/modprobe.d/amdgpu-gaming.conf"
+    if [[ ! -f "$MODPROBE_FILE" ]]; then
+        sudo tee "$MODPROBE_FILE" > /dev/null << 'EOF'
+options amdgpu ppfeaturemask=0xffffffff
+options amdgpu runpm=0
+EOF
+        [[ $? -ne 0 ]] && warn "Could not write $MODPROBE_FILE"
     fi
 
-    step "Installing AMD Mesa & Vulkan packages..."
-    local PKGS=(
-        mesa-vulkan-drivers libvulkan1 mesa-utils
-        libgl1-mesa-dri libglx-mesa0 mesa-vdpau-drivers
-        mesa-va-drivers libdrm-amdgpu1 libdrm-radeon1
-        libdrm2 radeontop linux-firmware
-    )
-
-    sudo apt install -y -qq "${PKGS[@]}" 2>/dev/null && ok "AMD Mesa drivers installed" || fail "Failed to install some AMD packages"
-
-    step "Updating AMDGPU firmware..."
-    sudo apt install --only-upgrade -y -qq linux-firmware 2>/dev/null && \
-        ok "AMDGPU firmware updated" || warn "Firmware update skipped"
+    ok "AMD drivers and performance tweaks applied"
 }

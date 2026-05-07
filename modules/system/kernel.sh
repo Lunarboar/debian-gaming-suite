@@ -11,12 +11,10 @@ install_liquorix_kernel() {
         return 0
     fi
 
-    step "Adding Liquorix repository..."
-    # Liquorix provides a simple script or we can add the repo manually
-    # For Debian/Ubuntu, it's often easiest via their script or manual apt
-    if curl -s 'https://liquorix.net/install-liquorix.sh' | sudo bash; then
-        ok "Liquorix kernel installed — active after reboot"
-    else
-        fail "Liquorix kernel installation failed"
+    step "Adding Liquorix repository and installing..."
+    if ! curl -s 'https://liquorix.net/install-liquorix.sh' | sudo bash; then
+        fail "Liquorix kernel installation failed. Check your internet connection or try manually."
+        return 1
     fi
+    ok "Liquorix kernel installed successfully"
 }

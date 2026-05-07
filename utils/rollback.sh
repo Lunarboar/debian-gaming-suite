@@ -15,6 +15,9 @@ backup_file() {
 }
 
 create_restore_script() {
+    # Ensure backup directory exists
+    mkdir -p "$BACKUP_DIR"
+    
     local RESTORE_SCRIPT="$BACKUP_DIR/restore.sh"
     sudo tee "$RESTORE_SCRIPT" > /dev/null << 'EOF'
 #!/bin/bash
